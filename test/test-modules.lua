@@ -44,6 +44,7 @@ function eextest.SpatialSAD_4() template_SpatialSAD('torch.DoubleTensor',1,1) en
 function eextest.SpatialSAD_5() template_SpatialSAD('torch.DoubleTensor',1,2) end
 function eextest.SpatialSAD_6() template_SpatialSAD('torch.DoubleTensor',3,3) end
 
+eex.test_modules_routines = eextest
 function eex.test_modules()
    xlua.require('image',true)
    mytester = torch.Tester()
