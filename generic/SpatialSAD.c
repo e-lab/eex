@@ -1,8 +1,24 @@
 #ifndef TH_GENERIC_FILE
 #define TH_GENERIC_FILE "generic/SpatialSAD.c"
 #else
-#if defined USE_SSE2 || defined USE_SSE3 || defined USE_SSE3 \
+#if defined USE_SSE2 || defined USE_SSE3 || defined USE_SSSE3 \
   || defined USE_SSE4_1 || defined USE_SSE4_2
+
+#ifdef USE_SSE2
+#include <emmintrin.h>
+#endif
+
+#ifdef USE_SSE3
+#include <pmmintrin.h>
+#endif
+
+#ifdef USE_SSSE3
+#include <tmmintrin.h>
+#endif
+
+#if defined (USE_SSE4_2) || defined (USE_SSE4_1)
+#include <smmintrin.h>
+#endif
 #include <emmintrin.h> //SSE2
 //#include <immintrin.h> // AVX
 #ifndef MM_ABS
@@ -22,7 +38,7 @@ inline __m128 _mm_abs_ps(__m128 m) {
 //  return _mm256_and_pd(a, *((__m256d*)am1) );
 //}
 #endif // mm_abs
-#endif // sse
+#endif // sse defs
 static int nn_(SpatialSAD_updateOutput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
@@ -83,12 +99,12 @@ static int nn_(SpatialSAD_updateOutput)(lua_State *L)
         ptr_output[l] = 0.0;
     }
 
-#if defined USE_SSE2 || defined USE_SSE3 || defined USE_SSE3 || defined USE_SSE4_1 || defined USE_SSE4_2
+#if defined USE_SSE2 || defined USE_SSE3 || defined USE_SSSE3 || defined USE_SSE4_1 || defined USE_SSE4_2
     if ((dW != 1) || (nOutputCols < 4)) {
 #endif
       /* regular loop */
       long zz,yy,xx,ky,kx;
-#pragma omp parallel for private(k,zz,yy,xx,ky,kx)
+//#pragma omp parallel for private(k,zz,yy,xx,ky,kx)
       for(k = 0; k < nOutputPlane; k++)
       {
         for(zz = 0; zz < nInputPlane; zz++)
@@ -116,17 +132,17 @@ static int nn_(SpatialSAD_updateOutput)(lua_State *L)
         /* output_data += nOutputCols*nOutputRows;*/
         }
       }
-#if defined USE_SSE2 || defined USE_SSE3 || defined USE_SSE3 || defined USE_SSE4_1 || defined USE_SSE4_2
+#if defined USE_SSE2 || defined USE_SSE3 || defined USE_SSSE3 || defined USE_SSE4_1 || defined USE_SSE4_2
     }
-    else { // sse loops
+    else { // sse loop
       long zz,yy,kx,ky,j;
 #pragma omp parallel for private(k,zz,yy,ky,kx,j)
       for(k = 0; k < nOutputPlane; k++)
       {
         for(zz = 0; zz < nInputPlane; zz++)
         {
-  //#pragma omp parallel for private(yy,ky,kx,j)
-          for(yy = 0; yy < nOutputRows; y++) {
+  #pragma omp parallel for private(yy,ky,kx,j)
+          for(yy = 0; yy < nOutputRows; yy++) {
             real *ptr_output = output_data + k*nOutputRows*nOutputCols + yy*nOutputCols;
             real *ptr_weight = weight_data + k*kstride0 + zz*kstride1;
             real *ptr_input = input_data + zz*istride0 + yy*dH*istride1;
@@ -262,8 +278,8 @@ static int nn_(SpatialSAD_updateOutput)(lua_State *L)
           }
         } 
       }
-    } // end sse loops
-#endif // sse loops
+    } // end sse loop
+#endif // sse loop
   }
   else
   {
