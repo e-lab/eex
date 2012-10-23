@@ -20,31 +20,32 @@ local function template_SpatialSAD(type,dw,dh)
    local s_time = 0
    local c_time = 0
    for i = 1,runs do
-      time = os.clock()
+      time = sys.clock()
       s_module:forward(input)
-      s_time = s_time + os.clock() - time
-      time = os.clock()
+      s_time = s_time + sys.clock() - time
+      time = sys.clock()
       c_module:forward(input)
-      c_time = c_time + os.clock() - time
+      c_time = c_time + sys.clock() - time
    end
    ratio = s_time / c_time
    print()
-   print('SpatialSAD takes ' .. ratio .. 'times as long as SpatialConv on ' .. type)
+   print('SpatialSAD takes ' .. ratio .. ' times as long as SpatialConv on ' .. type)
    mytester:assertlt(ratio,1.5,' - performance err (type: ' .. type .. ')')
    torch.setdefaulttensortype(default_type)
 end
--- SpatialSAD testing:
--- TODO: add Jacobian test once derivatives are implemented
--- TODO: add tests for batch version once implemented
--- TODO: test different strides once implemented
+
 function eextest.SpatialSAD_1() template_SpatialSAD('torch.FloatTensor',1,1) end
 function eextest.SpatialSAD_2() template_SpatialSAD('torch.DoubleTensor',1,1) end
 
-eex.test_performance_routines = eextest
-function eex.test_performance()
+-- SpatialSAD testing:
+-- TODO: add Jacobian test once derivatives are implemented
+-- TODO: add tests for batch version once implemented
+
+function eex.test_performance(tests)
    xlua.require('image',true)
+   xlua.require('sys',true)
    mytester = torch.Tester()
    mytester:add(eextest)
    torch.manualSeed(os.time())
-   mytester:run()
+   mytester:run(tests)
 end

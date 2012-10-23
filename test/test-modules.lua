@@ -33,10 +33,6 @@ local function template_SpatialSAD(type,dw,dh)
    mytester:assertTensorEq(m_output,l_output,1000*precision,' - output err (type: ' .. type .. ', dW: ' .. dw .. ', dH: ' .. dh .. ')')
    torch.setdefaulttensortype(default_type)
 end
--- SpatialSAD testing:
--- TODO: add Jacobian test once derivatives are implemented
--- TODO: add tests for batch version once implemented
--- TODO: test boundary conditions
 function eextest.SpatialSAD_1() template_SpatialSAD('torch.FloatTensor',1,1) end
 function eextest.SpatialSAD_2() template_SpatialSAD('torch.FloatTensor',1,2) end
 function eextest.SpatialSAD_3() template_SpatialSAD('torch.FloatTensor',3,3) end
@@ -44,11 +40,15 @@ function eextest.SpatialSAD_4() template_SpatialSAD('torch.DoubleTensor',1,1) en
 function eextest.SpatialSAD_5() template_SpatialSAD('torch.DoubleTensor',1,2) end
 function eextest.SpatialSAD_6() template_SpatialSAD('torch.DoubleTensor',3,3) end
 
-eex.test_modules_routines = eextest
-function eex.test_modules()
+-- SpatialSAD testing:
+-- TODO: add Jacobian test once derivatives are implemented
+-- TODO: add tests for batch version once implemented
+-- TODO: test boundary conditions
+
+function eex.test_modules(tests)
    xlua.require('image',true)
    mytester = torch.Tester()
    mytester:add(eextest)
    torch.manualSeed(os.time())
-   mytester:run()
+   mytester:run(tests)
 end
