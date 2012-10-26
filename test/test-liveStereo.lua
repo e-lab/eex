@@ -38,16 +38,16 @@ camera2 = image.Camera{idx=2,width=width,height=height,fps=fps}
 
 -- loading images
 
---iLc = image.loadPNG('im/imL-' .. opt.size .. '.png')
---iRc = image.loadPNG('im/imR-' .. opt.size .. '.png')
+--iRc = image.loadPNG('im/imL-' .. opt.size .. '.png')
+--iLc = image.loadPNG('im/imR-' .. opt.size .. '.png')
 
-iRc = camera1:forward()
-iLc = camera2:forward()
+iLc = camera1:forward() -- acquiring image from the LEFT camera
+iRc = camera2:forward() -- acquiring image from the RIGHT camera
 
 -- converting in B&W
 
-iL = image.rgb2y(iLc):float()
 iR = image.rgb2y(iRc):float()
+iL = image.rgb2y(iLc):float()
 
 -- useful parameters
 
@@ -56,8 +56,8 @@ dMin = opt.dMin      -- Minimum Disparity in X-direction (dMin < dMax)
 dMax = opt.dMax      -- Maximum Disparity in X-direction (dMax > dMin)
 method = 'SAD'       -- Method used for calculating the correlation scores (SAD is the only available atm)
 
-nr = (#iL)[2]        -- Number of row
-nc = (#iL)[3]        -- Number of column
+nr = (#iR)[2]        -- Number of row
+nc = (#iR)[3]        -- Number of column
 
 dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()  -- output Disparity Map
 
@@ -67,12 +67,12 @@ dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()
 
 -- Edge detection
 
-require 'edgeDetector'
-dispMap = edgeDetector(iL:double()) 
+--require 'edgeDetector'
+--dispMap = edgeDetector(iR:double()) 
 
 -- calling the stereoC.lua routine
 
---eex.stereo(dispMap, iL[1], iR[1], corrWindowSize, dMin, dMax)
+eex.stereo(dispMap, iR[1], iL[1], corrWindowSize, dMin, dMax)
 
 -- printing the time elapsed
 
@@ -82,21 +82,21 @@ dispMap = edgeDetector(iL:double())
 
 -- displaying input images and Disparity Map
 
---image.display{image = iLc, legend = 'Image 1'}
---image.display{image = iRc, legend = 'Image 2'}
+--image.display{image = iRc, legend = 'Image 1'}
+--image.display{image = iLc, legend = 'Image 2'}
 win = image.display{win = win, image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax, zoom = 3}
 --end
 
---[[i, totTime = 0, 0
+i, totTime = 0, 0
 
 while true do
    i = i + 1
    time = sys.clock()
-   iRc = camera1:forward()
-   iLc = camera2:forward()
-   iL = image.rgb2y(iLc):float()
+   iLc = camera1:forward()
+   iRc = camera2:forward()
    iR = image.rgb2y(iRc):float()
-   eex.stereo(dispMap, iL[1], iR[1], corrWindowSize, dMin, dMax)
+   iL = image.rgb2y(iLc):float()
+   eex.stereo(dispMap, iR[1], iL[1], corrWindowSize, dMin, dMax)
    --aaa = image.convolve(dispMap:double(),image.gaussian(5))
    time = sys.clock() - time
    totTime = totTime + time
@@ -105,5 +105,5 @@ while true do
       i, totTime = 0, 0
    end
    image.display{win = win, image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax, zoom = 3}
-end]]
+end
 
