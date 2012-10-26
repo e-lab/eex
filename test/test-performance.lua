@@ -2,11 +2,12 @@ local eextest = {}
 local precision = 1e-5
 local mytester
 
-local function template_SpatialSAD(type,dw,dh)
+local function template_SpatialSAD(type,dw,dh,runs,perf_factor)
    local default_type = torch.getdefaulttensortype()
    torch.setdefaulttensortype(type)
    local input = image.lena()
-   local runs=5
+   local runs = runs or 5
+   local perf_factor = perf_factor or 1.5
    local kn,kp,kh,kw
    kn=100;kp=3;kh=9;kw=9
    local kernels = torch.Tensor(kn,kp,kh,kw) 
@@ -30,12 +31,14 @@ local function template_SpatialSAD(type,dw,dh)
    ratio = s_time / c_time
    print()
    print('SpatialSAD takes ' .. ratio .. ' times as long as SpatialConv on ' .. type)
-   mytester:assertlt(ratio,1.5,' - performance err (type: ' .. type .. ')')
+   mytester:assertlt(ratio,perf_factor,' - performance err (type: ' .. type .. ')')
    torch.setdefaulttensortype(default_type)
 end
 
 function eextest.SpatialSAD_1() template_SpatialSAD('torch.FloatTensor',1,1) end
 function eextest.SpatialSAD_2() template_SpatialSAD('torch.DoubleTensor',1,1) end
+function eextest.SpatialSAD_3() template_SpatialSAD('torch.FloatTensor',4,1,5,2) end
+function eextest.SpatialSAD_4() template_SpatialSAD('torch.DoubleTensor',4,1,5,2) end
 
 -- SpatialSAD testing:
 -- TODO: add Jacobian test once derivatives are implemented

@@ -10,6 +10,7 @@ require 'libeex'
 
 -- nn modules:
 torch.include('eex', 'SpatialSAD.lua')
+torch.include('eex', 'SpatialSADMap.lua')
 torch.include('eex', 'SpatialMaxMap.lua')
 
 -- testing:

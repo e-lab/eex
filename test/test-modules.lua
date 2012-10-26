@@ -2,30 +2,35 @@ local eextest = {}
 local precision = 1e-5
 local mytester
 
+local function luasad(input,kernels,dw,dh)
+   local ip, ih, iw; local kn,kh,kw; local op, oh, ow;
+   ip = input:size(1); ih = input:size(2); iw = input:size(3)
+   kn = kernels:size(1); kh = kernels:size(3); kw = kernels:size(4)
+   op = kn; oh = math.floor((ih-kh)/dh+1); ow = math.floor((iw-kw)/dw+1)
+   local output = torch.Tensor(op,oh,ow)
+   for k = 0,(kn-1) do
+      for i = 0,(oh-1) do
+         for j = 0,(ow-1) do
+            output[{{k+1},{i+1},{j+1}}] = (input[{{},{i*dh+1,i*dh+kh},{j*dw+1,j*dw+kw}}]-kernels[k+1]):abs():sum()
+         end
+      end
+   end
+   return output
+end
+
+-- SpatialSAD testing:
+-- TODO: add Jacobian test once derivatives are implemented
+-- TODO: add tests for batch version once implemented
+-- TODO: test boundary conditions
 local function template_SpatialSAD(mtype,dw,dh)
    local default_type = torch.getdefaulttensortype()
    torch.setdefaulttensortype(mtype)
    local input = image.lena()[{{},{200,300},{200,300}}]
    local kn,kp,kh,kw
    kn=2;kp=3;kh=31;kw=31
-   local ker1 = input[{{},{50,50+kh},{50,50+kw}}]
-   local ker2 = input[{{},{10,10+kh},{10,10+kw}}]
+   local ker1 = input[{{},{50,50+kh-1},{50,50+kw-1}}]
+   local ker2 = input[{{},{10,10+kh-1},{10,10+kw-1}}]
    local kernels = torch.cat(ker1:resize(1,kp,kh,kw),ker2:resize(1,kp,kh,kw),1)
-   function luasad(input,kernels,dw,dh)
-      local ip, ih, iw; local kn,kh,kw; local op, oh, ow;
-      ip = input:size(1); ih = input:size(2); iw = input:size(3)
-      kn = kernels:size(1); kh = kernels:size(3); kw = kernels:size(4)
-      op = kn; oh = math.floor((ih-kh)/dh+1); ow = math.floor((iw-kw)/dw+1)
-      local output = torch.Tensor(op,oh,ow)
-      for k = 0,(kn-1) do
-         for i = 0,(oh-1) do
-            for j = 0,(ow-1) do
-               output[{{k+1},{i+1},{j+1}}] = (input[{{},{i*dh+1,i*dh+kh},{j*dw+1,j*dw+kw}}]-kernels[k+1]):abs():sum()
-            end
-         end
-      end
-      return output
-   end
    local module = nn.SpatialSAD(input:size(1),kn,kw,kh,dw,dh)
    module:templates(kernels)
    local m_output = module:forward(input)
@@ -40,10 +45,33 @@ function eextest.SpatialSAD_4() template_SpatialSAD('torch.DoubleTensor',1,1) en
 function eextest.SpatialSAD_5() template_SpatialSAD('torch.DoubleTensor',1,2) end
 function eextest.SpatialSAD_6() template_SpatialSAD('torch.DoubleTensor',3,3) end
 
--- SpatialSAD testing:
--- TODO: add Jacobian test once derivatives are implemented
--- TODO: add tests for batch version once implemented
--- TODO: test boundary conditions
+local function template_SpatialSADMap(mtype,dw,dh)
+   local default_type = torch.getdefaulttensortype()
+   torch.setdefaulttensortype(mtype)
+   local input = image.lena()[{{},{200,300},{200,300}}]
+   local kn,kp,kh,kw
+   kn=2;kp=2;kh=31;kw=31
+   local ker1 = input[{{1,2},{50,50+kh-1},{50,50+kw-1}}]
+   local ker2 = input[{{2,3},{10,10+kh-1},{10,10+kw-1}}]
+   local kernels = torch.cat(ker1,ker2,1)
+   local conMatrix = torch.Tensor({{1,1},{2,1},{2,2},{3,2}})
+   local module = nn.SpatialSADMap(conMatrix,kw,kh,dw,dh)
+   module.weight:copy(kernels)
+   local m_output = module:forward(input)
+   ker1 = torch.Tensor(1,kp,kh,kw):copy(ker1)
+   ker2 = torch.Tensor(1,kp,kh,kw):copy(ker2)
+   local l_output = torch.cat(luasad(input:sub(1,2),ker1,dw,dh),
+                              luasad(input:sub(2,3),ker2,dw,dh),
+                              1)
+   mytester:assertTensorEq(m_output,l_output,kp*kh*kw*precision,' - output err (type: ' .. mtype .. ', dW: ' .. dw .. ', dH: ' .. dh .. ')')
+   torch.setdefaulttensortype(default_type)
+end
+function eextest.SpatialSADMap_1() template_SpatialSADMap('torch.FloatTensor',1,1) end
+function eextest.SpatialSADMap_2() template_SpatialSADMap('torch.FloatTensor',1,2) end
+function eextest.SpatialSADMap_3() template_SpatialSADMap('torch.FloatTensor',3,3) end
+function eextest.SpatialSADMap_4() template_SpatialSADMap('torch.DoubleTensor',1,1) end
+function eextest.SpatialSADMap_5() template_SpatialSADMap('torch.DoubleTensor',1,2) end
+function eextest.SpatialSADMap_6() template_SpatialSADMap('torch.DoubleTensor',3,3) end
 
 local function template_SpatialMaxMap(mtype)
    local default_type = torch.getdefaulttensortype()
