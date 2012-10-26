@@ -10,6 +10,7 @@
 #include "generic/sad.c"
 #include "THGenerateFloatTypes.h"
 #include "generic/SpatialSAD.c"
+#include "generic/stereo.c"
 #include "THGenerateFloatTypes.h"
 #include "generic/SpatialSADMap.c"
 #include "THGenerateFloatTypes.h"
@@ -32,5 +33,7 @@ DLL_EXPORT int luaopen_libeex(lua_State *L)
   nn_DoubleSpatialSADMap_init(L);
   nn_DoubleSpatialMaxMap_init(L);
 
+  eex_StereoFunctions_init(L); 
+  
   return 1;
 }
