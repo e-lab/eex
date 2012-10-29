@@ -38,16 +38,25 @@ camera2 = image.Camera{idx=2,width=width,height=height,fps=fps}
 
 -- loading images
 
---iRc = image.loadPNG('im/imL-' .. opt.size .. '.png')
---iLc = image.loadPNG('im/imR-' .. opt.size .. '.png')
+---------------------------------------------------------------------------------
+-- INFO (for a correct connection of camera1 & 2)
+-- camera1 is the camera connected to the USB plug closest to the DC power supply
+-- camera2, instead, is the one closer to the user
 
-iLc = camera1:forward() -- acquiring image from the LEFT camera
-iRc = camera2:forward() -- acquiring image from the RIGHT camera
+-- In this program camera1 is supposed to serve as the LEFT camera,
+-- whereas camera2 shall match the RIGHT camera. The LEFT and RIGHT cameras
+-- provide respectively the RIGHT- and LEFT-shifted images
+
+-- iCameraX[c]: {i}mage from {Camera} {X} [{c}olour version; greyscale otherwise]
+---------------------------------------------------------------------------------
+
+iCameraLc = camera1:forward() -- acquiring image from the LEFT camera
+iCameraRc = camera2:forward() -- acquiring image from the RIGHT camera
 
 -- converting in B&W
 
-iR = image.rgb2y(iRc):float()
-iL = image.rgb2y(iLc):float()
+iCameraR = image.rgb2y(iCameraRc):float()
+iCameraL = image.rgb2y(iCameraLc):float()
 
 -- useful parameters
 
@@ -56,8 +65,8 @@ dMin = opt.dMin      -- Minimum Disparity in X-direction (dMin < dMax)
 dMax = opt.dMax      -- Maximum Disparity in X-direction (dMax > dMin)
 method = 'SAD'       -- Method used for calculating the correlation scores (SAD is the only available atm)
 
-nr = (#iR)[2]        -- Number of row
-nc = (#iR)[3]        -- Number of column
+nr = (#iCameraR)[2]        -- Number of row
+nc = (#iCameraR)[3]        -- Number of column
 
 dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()  -- output Disparity Map
 
@@ -68,11 +77,11 @@ dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()
 -- Edge detection
 
 --require 'edgeDetector'
---dispMap = edgeDetector(iR:double()) 
+--dispMap = edgeDetector(iCameraR:double()) 
 
 -- calling the stereoC.lua routine
 
-eex.stereo(dispMap, iR[1], iL[1], corrWindowSize, dMin, dMax)
+eex.stereo(dispMap, iCameraR[1], iCameraL[1], corrWindowSize, dMin, dMax)
 
 -- printing the time elapsed
 
@@ -82,22 +91,21 @@ eex.stereo(dispMap, iR[1], iL[1], corrWindowSize, dMin, dMax)
 
 -- displaying input images and Disparity Map
 
---image.display{image = iRc, legend = 'Image 1'}
---image.display{image = iLc, legend = 'Image 2'}
+--image.display{image = iCameraRc, legend = 'Image 1'}
+--image.display{image = iCameraLc, legend = 'Image 2'}
 win = image.display{win = win, image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax, zoom = 3}
---end
+--gnuplot.imagesc(dispMap,'color')
 
 i, totTime = 0, 0
 
 while true do
    i = i + 1
    time = sys.clock()
-   iLc = camera1:forward()
-   iRc = camera2:forward()
-   iR = image.rgb2y(iRc):float()
-   iL = image.rgb2y(iLc):float()
-   eex.stereo(dispMap, iR[1], iL[1], corrWindowSize, dMin, dMax)
-   --aaa = image.convolve(dispMap:double(),image.gaussian(5))
+   iCameraLc = camera1:forward()
+   iCameraRc = camera2:forward()
+   iCameraR = image.rgb2y(iCameraRc):float()
+   iCameraL = image.rgb2y(iCameraLc):float()
+   eex.stereo(dispMap, iCameraR[1], iCameraL[1], corrWindowSize, dMin, dMax)
    time = sys.clock() - time
    totTime = totTime + time
    if i == 10 then
