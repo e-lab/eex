@@ -32,6 +32,10 @@ iRc = image.loadPNG('im/imR-' .. opt.size .. '.png')
 iL = image.rgb2y(iLc):float()
 iR = image.rgb2y(iRc):float()
 
+-- computing the edges of the LEFT image
+require 'edgeDetector'
+edges = edgeDetector(iL:double()):float()
+
 -- useful parameters
 
 corrWindowSize = 9  -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
@@ -42,11 +46,6 @@ method = 'SAD'       -- Method used for calculating the correlation scores (SAD 
 nr = (#iL)[2]        -- Number of row
 nc = (#iL)[3]        -- Number of column
 
---[[ Test
-
-for i = 5, 9 do
-   dMax = 2^i ]]
-
 dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()  -- output Disparity Map
 
 -- Timer
@@ -55,7 +54,7 @@ time = sys.clock()
 
 -- calling the stereoC.lua routine
 
-eex.stereo(dispMap, iL[1], iR[1], corrWindowSize, dMin, dMax)
+eex.stereo(dispMap, iL[1], iR[1], edges[1], corrWindowSize, dMin, dMax)
 
 -- printing the time elapsed
 
@@ -67,4 +66,4 @@ print('dMax = ' .. dMax .. ', time elapsed = ' .. time .. 's')
 --image.display{image = iLc, legend = 'Image 1'}
 --image.display{image = iRc, legend = 'Image 2'}
 image.display{image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax}
---end
+image.display{image = edges, legend = 'Edges of LEFT image'}

@@ -85,8 +85,12 @@ while true do
    iCameraR = image.rgb2y(iCameraRc):float()
    iCameraL = image.rgb2y(iCameraLc):float()
 
+   -- Computing the edges of the LEFT image (RIGHT camera)
+   require 'edgeDetector'
+   edges = edgeDetector(iCameraR:double()):float()
+   
    -- Computing the stereo correlation
-   eex.stereo(dispMap, iCameraR[1], iCameraL[1], corrWindowSize, dMin, dMax)
+   eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges[1], corrWindowSize, dMin, dMax)
 
    -- Stopping the timer and summing up totTime
    time = sys.clock() - time
