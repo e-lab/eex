@@ -55,8 +55,8 @@ iCameraRc = camera2:forward() -- acquiring image from the RIGHT camera
 
 -- converting in B&W
 
-iCameraR = image.rgb2y(iCameraRc):float()
 iCameraL = image.rgb2y(iCameraLc):float()
+iCameraR = image.rgb2y(iCameraRc):float()
 
 -- useful parameters
 
@@ -70,48 +70,35 @@ nc = (#iCameraR)[3]        -- Number of column
 
 dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()  -- output Disparity Map
 
--- Timer
-
---time = sys.clock()
-
--- Edge detection
-
---require 'edgeDetector'
---dispMap = edgeDetector(iCameraR:double()) 
-
--- calling the stereoC.lua routine
-
-eex.stereo(dispMap, iCameraR[1], iCameraL[1], corrWindowSize, dMin, dMax)
-
--- printing the time elapsed
-
---time = sys.clock() - time
---print('dMax = ' .. dMax .. ', time elapsed = ' .. time .. 's')
---print('fps = ' .. 1/time)
-
--- displaying input images and Disparity Map
-
---image.display{image = iCameraRc, legend = 'Image 1'}
---image.display{image = iCameraLc, legend = 'Image 2'}
-win = image.display{win = win, image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax, zoom = 3}
---gnuplot.imagesc(dispMap,'color')
-
+-- Initialising variables for timing and fps printing
 i, totTime = 0, 0
 
 while true do
-   i = i + 1
-   time = sys.clock()
+   i = i + 1 -- Counter for the fps printing
+   time = sys.clock() -- Start timing
+
+   -- Grabbing the two colour images
    iCameraLc = camera1:forward()
    iCameraRc = camera2:forward()
+
+   -- Converting them into a greyscale map
    iCameraR = image.rgb2y(iCameraRc):float()
    iCameraL = image.rgb2y(iCameraLc):float()
+
+   -- Computing the stereo correlation
    eex.stereo(dispMap, iCameraR[1], iCameraL[1], corrWindowSize, dMin, dMax)
+
+   -- Stopping the timer and summing up totTime
    time = sys.clock() - time
    totTime = totTime + time
+
+   -- Every 10 frames, printing out the fps value
    if i == 10 then
       print('fps = ' .. 10/totTime)
       i, totTime = 0, 0
    end
-   image.display{win = win, image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax, zoom = 3}
+
+   -- Displaying the stereo correlation map
+   win = image.display{win = win, image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax, zoom = 3}
 end
 
