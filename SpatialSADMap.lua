@@ -1,59 +1,5 @@
 local SpatialSADMap, parent = torch.class('nn.SpatialSADMap', 'nn.Module')
 
-nn.tables = nn.tables or {}
-
-function nn.tables.full(nin, nout)
-   local ft = torch.Tensor(nin*nout,2)
-   local p = 1
-   for j=1,nout do
-      for i=1,nin do
-	 ft[p][1] = i
-	 ft[p][2] = j
-	 p = p + 1
-      end
-   end
-   return ft
-end
-
-function nn.tables.oneToOne(nfeat)
-   local ft = torch.Tensor(nfeat,2)
-   for i=1,nfeat do
-      ft[i][1] = i
-      ft[i][2] = i
-   end
-   return ft
-end
-
-function nn.tables.random(nin, nout, nto)
-   local nker = nto * nout
-   local tbl = torch.Tensor(nker, 2)
-   local fi = torch.randperm(nin)
-   local frcntr = 1
-   local tocntr = 1
-   local nfi = math.floor(nin/nto) -- number of distinct nto chunks 
-   local rfi = math.mod(nin,nto) -- number of remaining from maps
-   local totbl = tbl:select(2,2)
-   local frtbl = tbl:select(2,1)
-   local fitbl = fi:narrow(1, 1, (nfi * nto)) -- part of fi that covers distinct chunks
-   local ufrtbl= frtbl:unfold(1, nto, nto)
-   local utotbl= totbl:unfold(1, nto, nto)
-   local ufitbl= fitbl:unfold(1, nto, nto)
-   
-   -- start filling frtbl
-   for i=1,nout do -- fro each unit in target map
-      ufrtbl:select(1,i):copy(ufitbl:select(1,frcntr))
-      frcntr = frcntr + 1
-      if frcntr-1 ==  nfi then -- reset fi
-	 fi:copy(torch.randperm(nin))
-	 frcntr = 1
-      end
-   end
-   for tocntr=1,utotbl:size(1) do
-      utotbl:select(1,tocntr):fill(tocntr)
-   end
-   return tbl
-end
-
 function constructTableRev(conMatrix)
    local conMatrixL = conMatrix:type('torch.LongTensor')
    -- Construct reverse lookup connection table
@@ -120,12 +66,12 @@ function SpatialSADMap:reset(stdv)
       local ninp = torch.Tensor(self.nOutputPlane):zero()
       for i=1,self.connTable:size(1) do ninp[self.connTable[i][2]] =  ninp[self.connTable[i][2]]+1 end
       for k=1,self.connTable:size(1) do
-	 stdv = 1/math.sqrt(self.kW*self.kH*ninp[self.connTable[k][2]])
-	 self.weight:select(1,k):apply(function() return torch.uniform(-stdv,stdv) end)
+         stdv = 1/math.sqrt(self.kW*self.kH*ninp[self.connTable[k][2]])
+         self.weight:select(1,k):apply(function() return torch.uniform(-stdv,stdv) end)
       end
       for k=1,self.bias:size(1) do
-	 stdv = 1/math.sqrt(self.kW*self.kH*ninp[k])
-	 self.bias[k] = torch.uniform(-stdv,stdv)
+         stdv = 1/math.sqrt(self.kW*self.kH*ninp[k])
+         self.bias[k] = torch.uniform(-stdv,stdv)
       end
    end
 end
