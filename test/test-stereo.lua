@@ -20,6 +20,7 @@ cmd:option('-size', 'big', 'Input the size {big|75|mid|25|Sabine|Table|Computer}
 cmd:option('-dMax', '16', 'Maximum disparity in X-direction')
 cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
 cmd:option('-th', '.06', 'Background filtering [0, 2.5]')
+cmd:option('-save', 'n', 'Save to file {[n],y}?')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -68,3 +69,19 @@ print('dMax = ' .. dMax .. ', time elapsed = ' .. time .. 's')
 --image.display{image = iRc, legend = 'Image 2'}
 image.display{image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax}
 --image.display{image = edges, legend = 'Edges of LEFT image'}
+
+
+if opt.save == 'y' then
+   io.write('Input the file name (without extension): ')
+   ans = io.read()
+   ans = ans .. '.png'
+
+   -- saving the result to png file
+
+   im = torch.Tensor(1,(#dispMap)[1],(#dispMap)[2])
+   im[1] = dispMap
+   im:mul(1/(dMax-dMin))
+   image.savePNG(ans,im)
+
+   io.write('"' .. ans .. '" written succesfully!\n')
+end
