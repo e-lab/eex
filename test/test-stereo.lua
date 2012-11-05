@@ -19,6 +19,7 @@ cmd:text('Options:')
 cmd:option('-size', 'big', 'Input the size {big|75|mid|25|Sabine|Table|Computer}')
 cmd:option('-dMax', '16', 'Maximum disparity in X-direction')
 cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
+cmd:option('-th', '.06', 'Background filtering [0, 2.5]')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -34,7 +35,7 @@ iR = image.rgb2y(iRc):float()
 
 -- computing the edges of the LEFT image
 require 'edgeDetector'
-edges = edgeDetector(iL:double()):float()
+edges = edgeDetector(iL:double()):float()[1]:abs()
 
 -- useful parameters
 
@@ -54,7 +55,7 @@ time = sys.clock()
 
 -- calling the stereoC.lua routine
 
-eex.stereo(dispMap, iL[1], iR[1], edges[1], corrWindowSize, dMin, dMax)
+eex.stereo(dispMap, iL[1], iR[1], edges, corrWindowSize, dMin, dMax, opt.th)
 
 -- printing the time elapsed
 
@@ -66,4 +67,4 @@ print('dMax = ' .. dMax .. ', time elapsed = ' .. time .. 's')
 --image.display{image = iLc, legend = 'Image 1'}
 --image.display{image = iRc, legend = 'Image 2'}
 image.display{image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax}
-image.display{image = edges, legend = 'Edges of LEFT image'}
+--image.display{image = edges, legend = 'Edges of LEFT image'}

@@ -16,9 +16,9 @@ cmd:text('SAD stereo algorith (dense match my C youtine) live demo')
 cmd:text()
 cmd:text('Options:')
 -- global:
---cmd:option('-size', 'big', 'Input the size {big|75|mid|25|Sabine|Table|Computer}')
 cmd:option('-dMax', '16', 'Maximum disparity in X-direction')
 cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
+cmd:option('-th', '.06', 'Background filtering [0, 2.5]')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -87,10 +87,10 @@ while true do
 
    -- Computing the edges of the LEFT image (RIGHT camera)
    require 'edgeDetector'
-   edges = edgeDetector(iCameraR:double()):float()
+   edges = edgeDetector(iCameraR:double()):float()[1]:abs()
    
    -- Computing the stereo correlation
-   eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges[1], corrWindowSize, dMin, dMax)
+   eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, opt.th)
 
    -- Stopping the timer and summing up totTime
    time = sys.clock() - time

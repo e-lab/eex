@@ -16,14 +16,16 @@ static int l_stereo(lua_State *L)
 	int corrWindowSize = lua_tonumber(L, 5);
 	int dMin = lua_tonumber(L, 6);
 	int dMax = lua_tonumber(L, 7);
+    float th = lua_tonumber(L,8);
 
 	//Debug - yes, it does work
 	//printf("Test from C\n");
 
 	// get raw pointers
 	float *dispMap = THFloatTensor_data(dispMap_ptr);
-	float *iL = THFloatTensor_data(iL_ptr);
-	float *iR = THFloatTensor_data(iR_ptr);
+	float *iL      = THFloatTensor_data(iL_ptr);
+	float *iR      = THFloatTensor_data(iR_ptr);
+    float *edges   = THFloatTensor_data(edges_ptr);
 
 	// dims
 	int nr = iL_ptr->size[0];
@@ -38,6 +40,7 @@ static int l_stereo(lua_State *L)
 	printf("is[0] = %li, is[1] = %li\n",is[0],is[1]);
 	printf("os[0] = %li, os[1] = %li\n",os[0],os[1]);
 	printf("es[0] = %li, es[1] = %li\n",es[0],es[1]);
+    printf("th = %f\n", th);
 	getchar();*/
 
 	// stereo algoithm
@@ -61,7 +64,8 @@ static int l_stereo(lua_State *L)
 			float prevCorrScore = 65532;
 			int bestMatchSoFar = dMin;
 
-			for (d = dMin; d <= dMax; d++) {
+			if (*(edges+i*es[0]+j*es[1]) > th)
+            for (d = dMin; d <= dMax; d++) {
 
 				int pos0 = i*is[0] + (j+dMin)*is[1];
 				int pos1 = i*is[0] + (j+dMin+d)*is[1];
