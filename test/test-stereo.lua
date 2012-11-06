@@ -5,7 +5,10 @@
 -- required packages
 
 require 'image'
+
+-- c lib:
 require 'eex'
+require 'libimgraph'
 
 -- options
 print '==> processing options'
@@ -21,6 +24,7 @@ cmd:option('-dMax', '16', 'Maximum disparity in X-direction')
 cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
 cmd:option('-th', '.06', 'Background filtering [0, 2.5]')
 cmd:option('-save', 'n', 'Save to file {[n],y}?')
+cmd:option('-kSize', '5', 'Edge kernel size {3,[5]}')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -36,7 +40,7 @@ iR = image.rgb2y(iRc):float()
 
 -- computing the edges of the LEFT image
 require 'edgeDetector'
-edges = edgeDetector(iL:double()):float()[1]:abs()
+edges = edgeDetector(iL:double(),opt.kSize):float()[1]:abs()
 
 -- useful parameters
 
@@ -67,21 +71,33 @@ print('dMax = ' .. dMax .. ', time elapsed = ' .. time .. 's')
 
 --image.display{image = iLc, legend = 'Image 1'}
 --image.display{image = iRc, legend = 'Image 2'}
-image.display{image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax}
+image.display{image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}
 --image.display{image = edges, legend = 'Edges of LEFT image'}
 
+-- saving the result to png file
 
 if opt.save == 'y' then
    io.write('Input the file name (without extension): ')
    ans = io.read()
    ans = ans .. '.png'
-
-   -- saving the result to png file
-
    im = torch.Tensor(1,(#dispMap)[1],(#dispMap)[2])
    im[1] = dispMap
    im:mul(1/(dMax-dMin))
    image.savePNG(ans,im)
-
    io.write('"' .. ans .. '" written succesfully!\n')
 end
+
+-- colourise the output
+
+map = image.colormap(dMax-dMin + 1):float() -- generate the colourmap
+map[1]:fill(.5)
+--[[dispMapC = imgraph.colorize(dispMap) -- colourise the greyscale map
+image.display{image = dispMapC, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}
+dispMapC = imgraph.colorize(dispMap) -- colourise the greyscale map
+image.display{image = dispMapC, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}]]
+
+-- auto type
+colourised = torch.Tensor():typeAs(dispMap)
+dispMap.imgraph.colorize(colourised, dispMap, map)
+
+image.display{image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}
