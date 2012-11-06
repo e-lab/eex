@@ -7,7 +7,7 @@ dMin = 0
 dMax = 16
 
 -- generate the colourmap
-map = image.colormap(dMax-dMin)
+--map = image.colormap(dMax-dMin)
 
 -- load stereo output greyscale image
 stereoG = image.loadPNG('stereoOutput.png')

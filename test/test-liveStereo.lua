@@ -5,7 +5,10 @@
 -- required packages
 
 require 'image'
+
+-- c lib:
 require 'eex'
+require 'libimgraph'
 
 -- options
 print '==> processing options'
@@ -18,7 +21,8 @@ cmd:text('Options:')
 -- global:
 cmd:option('-dMax', '16', 'Maximum disparity in X-direction')
 cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
-cmd:option('-th', '.06', 'Background filtering [0, 2.5]')
+cmd:option('-th', '.08', 'Background filtering [0, 2.5], 0.06 better for kSize = 3, 0.08 better for kSize = 5')
+cmd:option('-kSize', '5', 'Edge kernel size {3,5}')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -61,14 +65,20 @@ iCameraR = image.rgb2y(iCameraRc):float()
 -- useful parameters
 
 corrWindowSize = 9  -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
-dMin = opt.dMin      -- Minimum Disparity in X-direction (dMin < dMax)
-dMax = opt.dMax      -- Maximum Disparity in X-direction (dMax > dMin)
-method = 'SAD'       -- Method used for calculating the correlation scores (SAD is the only available atm)
+dMin = opt.dMin     -- Minimum Disparity in X-direction (dMin < dMax)
+dMax = opt.dMax     -- Maximum Disparity in X-direction (dMax > dMin)
+method = 'SAD'      -- Method used for calculating the correlation scores (SAD is the only available atm)
 
 nr = (#iCameraR)[2]        -- Number of row
 nc = (#iCameraR)[3]        -- Number of column
 
-dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()  -- output Disparity Map
+dispMapR = nr-(corrWindowSize-1)
+dispMapC = nc-(corrWindowSize+dMax-1)
+
+dispMap = torch.zeros(dispMapR, dispMapC):float()  -- output Disparity Map
+map = image.colormap(dMax-dMin + 1):float() -- generate the colourmap
+map[1]:fill(.5)
+colourised = torch.Tensor():typeAs(dispMap)
 
 -- Initialising variables for timing and fps printing
 i, totTime = 0, 0
@@ -87,7 +97,7 @@ while true do
 
    -- Computing the edges of the LEFT image (RIGHT camera)
    require 'edgeDetector'
-   edges = edgeDetector(iCameraR:double()):float()[1]:abs()
+   edges = edgeDetector(iCameraR:double(),opt.kSize):float()[1]:abs()
    
    -- Computing the stereo correlation
    eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, opt.th)
@@ -103,6 +113,10 @@ while true do
    end
 
    -- Displaying the stereo correlation map
-   win = image.display{win = win, image = dispMap, legend = 'Disparity map dense, dMax = ' .. dMax, zoom = 3}
+   win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3}
+   --dispMapC = imgraph.colorize(dispMap) -- colourise the greyscale map
+   --winc = image.display{win = winc, image = dispMapC, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3}
+   dispMap.imgraph.colorize(colourised, dispMap, map)
+   winc = image.display{win = winc, image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3}
 end
 
