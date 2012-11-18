@@ -9,11 +9,16 @@
 #include "generic/SpatialSAD.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/SpatialMaxMap.c"
+#include "THGenerateFloatTypes.h"
+
 DLL_EXPORT int luaopen_libeex(lua_State *L)
 {
   nn_FloatSpatialSAD_init(L);
+  nn_FloatSpatialMaxMap_init(L);
 
   nn_DoubleSpatialSAD_init(L);
+  nn_DoubleSpatialMaxMap_init(L);
 
   return 1;
 }
