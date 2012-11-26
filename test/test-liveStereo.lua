@@ -18,11 +18,13 @@ cmd:text()
 cmd:text('SAD stereo algorith (dense match my C youtine) live demo')
 cmd:text()
 cmd:text('Options:')
+
 -- global:
 cmd:option('-dMax', '16', 'Maximum disparity in X-direction')
 cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
 cmd:option('-th', '.08', 'Background filtering [0, 2.5], 0.06 better for kSize = 3, 0.08 better for kSize = 5')
 cmd:option('-kSize', '5', 'Edge kernel size {3,5}')
+cmd:option('-width', '400', 'Enter the width of the camera frame (robot feasible width = 60)')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -30,12 +32,11 @@ opt = cmd:parse(arg or {})
 
 require 'xlua'
 require 'camera'
-width = 400
-height = 300
-fps = 30 
-dir = 'test_vid_two'
-
-sys.execute(string.format('mkdir -p %s',dir))
+width = tonumber(opt.width)
+height = 300 * width / 400
+fps = 30
+--dir = 'test_vid_two'
+--sys.execute(string.format('mkdir -p %s',dir))
 
 camera1 = image.Camera{idx=1,width=width,height=height,fps=fps}
 camera2 = image.Camera{idx=2,width=width,height=height,fps=fps}
@@ -67,7 +68,6 @@ iCameraR = image.rgb2y(iCameraRc):float()
 corrWindowSize = 9  -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
 dMin = opt.dMin     -- Minimum Disparity in X-direction (dMin < dMax)
 dMax = opt.dMax     -- Maximum Disparity in X-direction (dMax > dMin)
-method = 'SAD'      -- Method used for calculating the correlation scores (SAD is the only available atm)
 
 nr = (#iCameraR)[2]        -- Number of row
 nc = (#iCameraR)[3]        -- Number of column
@@ -77,7 +77,7 @@ dispMapC = nc-(corrWindowSize+dMax-1)
 
 dispMap = torch.zeros(dispMapR, dispMapC):float()  -- output Disparity Map
 map = image.colormap(dMax-dMin + 1):float() -- generate the colourmap
-map[1]:fill(.5)
+map[1]:fill(.5) -- set to a neutral grey the non-computed disparity values
 colourised = torch.Tensor():typeAs(dispMap)
 
 -- Initialising variables for timing and fps printing
@@ -98,7 +98,7 @@ while true do
    -- Computing the edges of the LEFT image (RIGHT camera)
    require 'edgeDetector'
    edges = edgeDetector(iCameraR:double(),opt.kSize):float()[1]:abs()
-   
+
    -- Computing the stereo correlation
    eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, opt.th)
 
@@ -113,10 +113,7 @@ while true do
    end
 
    -- Displaying the stereo correlation map
-   win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3}
-   --dispMapC = imgraph.colorize(dispMap) -- colourise the greyscale map
-   --winc = image.display{win = winc, image = dispMapC, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3}
+   win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
    dispMap.imgraph.colorize(colourised, dispMap, map)
-   winc = image.display{win = winc, image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3}
+   winc = image.display{win = winc, image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
 end
-
