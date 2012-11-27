@@ -115,7 +115,7 @@ while true do
    end
 
    -- Displaying the stereo correlation map
-   win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
+   --win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
    dispMap.imgraph.colorize(colourised, dispMap, map)
    winc = image.display{win = winc, image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
 end
