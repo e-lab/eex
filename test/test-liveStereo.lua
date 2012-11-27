@@ -25,6 +25,7 @@ cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
 cmd:option('-th', '.08', 'Background filtering [0, 2.5], 0.06 better for kSize = 3, 0.08 better for kSize = 5')
 cmd:option('-kSize', '5', 'Edge kernel size {3,5}')
 cmd:option('-width', '400', 'Enter the width of the camera frame (robot feasible width = 60)')
+cmd:option('-UpDown', '0', 'Enter the number of preceding/succeding lines to check')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -68,11 +69,12 @@ iCameraR = image.rgb2y(iCameraRc):float()
 corrWindowSize = 9  -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
 dMin = opt.dMin     -- Minimum Disparity in X-direction (dMin < dMax)
 dMax = opt.dMax     -- Maximum Disparity in X-direction (dMax > dMin)
+UpDown = opt.UpDown -- Specifies the UpDown search
 
 nr = (#iCameraR)[2]        -- Number of row
 nc = (#iCameraR)[3]        -- Number of column
 
-dispMapR = nr-(corrWindowSize-1)
+dispMapR = nr-(corrWindowSize+2*UpDown-1)
 dispMapC = nc-(corrWindowSize+dMax-1)
 
 dispMap = torch.zeros(dispMapR, dispMapC):float()  -- output Disparity Map
@@ -102,7 +104,7 @@ while true do
    edges = edgeDetector(iCameraR:double(),opt.kSize):float()[1]:abs()
 
    -- Computing the stereo correlation
-   eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, opt.th)
+   eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
 
    -- Stopping the timer and summing up totTime
    time = sys.clock() - time
