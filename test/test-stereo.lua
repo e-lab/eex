@@ -25,6 +25,7 @@ cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
 cmd:option('-th', '.06', 'Background filtering [0, 2.5]')
 cmd:option('-save', 'n', 'Save to file {[n],y}?')
 cmd:option('-kSize', '5', 'Edge kernel size {3,[5]}')
+cmd:option('-UpDown', '0', 'Enter the number of preceding/succeding lines to check')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -44,15 +45,15 @@ edges = edgeDetector(iL:double(),opt.kSize):float()[1]:abs()
 
 -- useful parameters
 
-corrWindowSize = 9  -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
+corrWindowSize = 9   -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
 dMin = opt.dMin      -- Minimum Disparity in X-direction (dMin < dMax)
 dMax = opt.dMax      -- Maximum Disparity in X-direction (dMax > dMin)
-method = 'SAD'       -- Method used for calculating the correlation scores (SAD is the only available atm)
+UpDown = opt.UpDown -- Specifies the UpDown search
 
 nr = (#iL)[2]        -- Number of row
 nc = (#iL)[3]        -- Number of column
 
-dispMap = torch.zeros(nr-(corrWindowSize-1), nc-(corrWindowSize+dMax-1)):float()  -- output Disparity Map
+dispMap = torch.zeros(nr-(corrWindowSize+2*UpDown-1), nc-(corrWindowSize+dMax-1)):float()  -- output Disparity Map
 
 -- Timer
 
@@ -60,7 +61,7 @@ time = sys.clock()
 
 -- calling the stereoC.lua routine
 
-eex.stereo(dispMap, iL[1], iR[1], edges, corrWindowSize, dMin, dMax, opt.th)
+eex.stereo(dispMap, iL[1], iR[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
 
 -- printing the time elapsed
 
@@ -71,7 +72,7 @@ print('dMax = ' .. dMax .. ', time elapsed = ' .. time .. 's')
 
 --image.display{image = iLc, legend = 'Image 1'}
 --image.display{image = iRc, legend = 'Image 2'}
-image.display{image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}
+image.display{image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 2}
 --image.display{image = edges, legend = 'Edges of LEFT image'}
 
 -- saving the result to png file
@@ -98,4 +99,4 @@ map[1]:fill(.5) -- set to a neutral grey the non-computed disparity values
 colourised = torch.Tensor():typeAs(dispMap)
 dispMap.imgraph.colorize(colourised, dispMap, map)
 
-image.display{image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}
+image.display{image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 2}
