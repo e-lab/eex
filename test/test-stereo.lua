@@ -89,12 +89,10 @@ end
 
 -- colourise the output
 
-map = image.colormap(dMax-dMin + 1):float() -- generate the colourmap
-map[1]:fill(.5)
---[[dispMapC = imgraph.colorize(dispMap) -- colourise the greyscale map
-image.display{image = dispMapC, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}
-dispMapC = imgraph.colorize(dispMap) -- colourise the greyscale map
-image.display{image = dispMapC, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th}]]
+map = torch.Tensor(dMax-dMin + 1,3):float() -- allocate the space for the colourmap + the NC (grey) layer
+--map = image.colormap(dMax-dMin + 1):float() -- generate a linearly spaced colourmap around Newton-(hue)-'s wheel
+map[{ {2,dMax-dMin+1},{} }]  = image.jetColormap(dMax-dMin):float() -- generate a Jet colourmap (I made this function u.u)
+map[1]:fill(.5) -- set to a neutral grey the non-computed disparity values
 
 -- auto type
 colourised = torch.Tensor():typeAs(dispMap)
