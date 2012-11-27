@@ -76,9 +76,11 @@ dispMapR = nr-(corrWindowSize-1)
 dispMapC = nc-(corrWindowSize+dMax-1)
 
 dispMap = torch.zeros(dispMapR, dispMapC):float()  -- output Disparity Map
-map = image.colormap(dMax-dMin + 1):float() -- generate the colourmap
+map = torch.Tensor(dMax-dMin + 1,3):float() -- allocate the space for the colourmap + the NC (grey) layer
+--map = image.colormap(dMax-dMin + 1):float() -- generate a linearly spaced colourmap around Newton-(hue)-'s wheel
+map[{ {2,dMax-dMin+1},{} }]  = image.jetColormap(dMax-dMin):float() -- generate a Jet colourmap (I made this function u.u)
 map[1]:fill(.5) -- set to a neutral grey the non-computed disparity values
-colourised = torch.Tensor():typeAs(dispMap)
+colourised = torch.Tensor():typeAs(dispMap) -- allocate the space for the colourised version of the disparity map
 
 -- Initialising variables for timing and fps printing
 i, totTime = 0, 0

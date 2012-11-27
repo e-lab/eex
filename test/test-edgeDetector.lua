@@ -18,7 +18,7 @@ require 'xlua'
 require 'camera'
 width = 400
 height = 300
-fps = 30 
+fps = 30
 --dir = 'test_vid_two'
 
 --sys.execute(string.format('mkdir -p %s',dir))
