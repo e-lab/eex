@@ -55,15 +55,18 @@ static int l_stereo(lua_State *L)
   //      printf("%ld\n",m);
   //    }
 
+int lowerLimit = 0;
+if (dMin < 0) lowerLimit = -dMin;
+
 #pragma omp parallel for private(i,j,ii,jj,d,ud)
   for (i = 0; i < nr-(corrWindowSize+2*UpDown-1); i++)
-    for (j = 0; j < nc-(corrWindowSize+dMax-1); j++) {
+    for (j = lowerLimit; j < nc-(corrWindowSize+dMax-1); j++) {
 
       //Debug
       //printf("i = %i, j = %i\n",i,
 
       float prevCorrScore = 65532;
-      int bestMatchSoFar = dMin;
+      int bestMatchSoFar = lowerLimit+dMin;
 
       if (*(edges+i*es[0]+j*es[1]) > th)
         for (ud = 0; ud <= 2*UpDown; ud++)
@@ -103,7 +106,7 @@ static int l_stereo(lua_State *L)
             }
           }
 
-      dispMap[ i*os[0]+j*os[1] ] = bestMatchSoFar;
+      dispMap[ i*os[0]+(j-lowerLimit)*os[1] ] = bestMatchSoFar;
     }
 
   lua_newtable(L);           // result = {}
