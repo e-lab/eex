@@ -46,10 +46,12 @@ static int l_stereo(lua_State *L)
     printf("th = %f\n", th);
     getchar();*/
 
-  // stereo algoithm
+  // NEW stereo algoithm: more powerful and now it performs an Optical Flow
+  // too! The FINAL ALGORITHM follows ->
 
   int i,j,ii,jj,d,ud;
 
+  // Test for parallel computing
   //    long k;
   //#pragma omp parallel for private(k)
   //    for (k = 0; k < 1000000000000; k++){
@@ -57,36 +59,37 @@ static int l_stereo(lua_State *L)
   //      printf("%ld\n",m);
   //    }
 
-int lowerLimit = 0;
-if (dMin < 0) lowerLimit = -dMin;
+  // Test 'stereo' or 'opticalFlow'? Therefore parameters are initialised
+  int lowerLimit = 0;
+  if (dMin < 0) lowerLimit = -dMin;
 
 #pragma omp parallel for private(i,j,ii,jj,d,ud)
   for (i = 0; i < nr-(corrWindowSize+2*UpDown-1); i++)
     for (j = lowerLimit; j < nc-(corrWindowSize+dMax-1); j++) {
 
-      //Debug
+      // Debug
       //printf("i = %i, j = %i\n",i,
 
       float prevCorrScore = 65532;
-      int bestMatchSoFar = lowerLimit+dMin;
-      int bestY = UpDown;
+      int bestX = lowerLimit+dMin; //dMin for stereo, 0 for opticalFlow
+      int bestY = UpDown; //this does make sense only for opticalFlow
 
 
-      if (*(edges+i*es[0]+j*es[1]) > th)
-        for (ud = 0; ud <= 2*UpDown; ud++)
-          for (d = dMin; d <= dMax; d++) {
+      if (*(edges+i*es[0]+j*es[1]) > th) //if it's not background, then ->
+        for (ud = 0; ud <= 2*UpDown; ud++) //look up and down (only positive n)
+          for (d = dMin; d <= dMax; d++) { //look left and right (neg and pos n)
 
-            int pos0 = (i+UpDown)*is[0] + (j+dMin)*is[1];
-            int pos1 = (i+ud)*is[0] + (j+dMin+d)*is[1];
+            int pos0 = (i+UpDown)*is[0] + (j+dMin)*is[1]; //reference position
+            int pos1 = (i+ud)*is[0] + (j+dMin+d)*is[1]; //traveling position (d, ud)
             float corrScore = 0;
 
-            for (ii = 0; ii < corrWindowSize; ii++) {
+            for (ii = 0; ii < corrWindowSize; ii++) { //SAD
               float *i_ptr = iL+pos0+ii*is[0];
               float *j_ptr = iR+pos1+ii*is[0];
               for (jj = 0; jj < corrWindowSize; jj++) {
-                //float pxDiff = abs( iL[pos0+ii*is[0]+jj*is[1] ] - iR[pos1+ii*is[0]+jj*is[1] ]);
-                //float pxDiff = abs( *i_ptr  - iR[pos1+ii*is[0]+jj*is[1] ]);
-                float pxDiff = abs( *i_ptr - *j_ptr );
+                //float pxDiff = abs( iL[pos0+ii*is[0]+jj*is[1] ] - iR[pos1+ii*is[0]+jj*is[1] ]); //basic version
+                //float pxDiff = abs( *i_ptr  - iR[pos1+ii*is[0]+jj*is[1] ]); //first more cmplx version for higher parallel implementation
+                float pxDiff = abs( *i_ptr - *j_ptr ); //SSE compatible format (not implemented yet)
 
                 //Debug
                 //printf("ii = %i, jj = %i, pxDiff = %f",ii,jj,pxDiff);
@@ -96,23 +99,23 @@ if (dMin < 0) lowerLimit = -dMin;
               }
             }
 
-            /*//Debug
-              printf("corrScore = %f\n",corrScore);
+            // Debug
+            /*printf("corrScore = %f\n",corrScore);
               printf("prevCorrScore = %f\n",prevCorrScore);
-              printf("bestMatchSoFar = %f, d = %i\n",d);
+              printf("bestX = %f, d = %i\n",d);
+              getchar();
+              uprintf("%d and ",UpDown);
               getchar();*/
-            /*printf("%d and ",UpDown);
-            getchar();*/ //TODO check the 'memory'!!! it remembers!!
 
             if (corrScore < prevCorrScore) {
               prevCorrScore = corrScore;
-              bestMatchSoFar = d;
-              bestY = ud;
+              bestX = d;  //left/right best match
+              bestY = ud; //up/down best match
             }
           }
 
       dispMapY[ i*os[0]+(j-lowerLimit)*os[1] ] = bestY;
-      dispMapX[ i*os[0]+(j-lowerLimit)*os[1] ] = bestMatchSoFar;
+      dispMapX[ i*os[0]+(j-lowerLimit)*os[1] ] = bestX; //dispMapX overwrite dispMapY in stereo
     }
 
   lua_newtable(L);           // result = {}
