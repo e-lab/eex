@@ -61,7 +61,7 @@ time = sys.clock()
 
 -- calling the stereoC.lua routine
 
-eex.stereo(dispMap, iL[1], iR[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
+eex.stereo(dispMap, dispMap, iL[1], iR[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
 
 -- printing the time elapsed
 
