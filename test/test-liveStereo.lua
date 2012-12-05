@@ -27,6 +27,7 @@ cmd:option('-th', '.08', 'Background filtering [0, 2.5], 0.06 better for kSize =
 cmd:option('-kSize', '5', 'Edge kernel size {3,5}')
 cmd:option('-width', '100', 'Enter the width of the camera frame (robot feasible width = 60), max 400')
 cmd:option('-UpDown', '0', 'Enter the number of preceding/succeding lines to check')
+cmd:option('-fps', '15', 'Enter the desired fps')
 cmd:text()
 opt = cmd:parse(arg or {})
 
@@ -36,7 +37,7 @@ require 'xlua'
 require 'camera'
 width = tonumber(opt.width)
 height = 300 * width / 400
-fps = 30
+fps = opt.fps
 --dir = 'test_vid_two'
 --sys.execute(string.format('mkdir -p %s',dir))
 
