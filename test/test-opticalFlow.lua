@@ -76,12 +76,19 @@ nc = (#iCamera)[3]        -- Number of column
 dispMapR = nr-(corrWindowSize+2*UpDown-1)
 dispMapC = nc-(corrWindowSize+dMax-dMin-1)
 
-dispMap = torch.zeros(dispMapR, dispMapC):float()  -- output Disparity Map
+dispMapX = torch.zeros(dispMapR, dispMapC):float()  -- output Disparity Map X vector
+dispMapY = torch.zeros(dispMapR, dispMapC):float()  -- output Disparity Map Y vector
+
 --map = torch.Tensor(dMax-dMin + 1,3):float() -- allocate the space for the colourmap + the NC (grey) layer
-map = image.jetColormap(dMax-dMin + 1):float() -- generate a linearly spaced colourmap around Newton-(hue)-'s wheel
+mapX = image.jetColormap(dMax-dMin + 1):float() -- generate a linearly spaced colourmap around Newton-(hue)-'s wheel
 --map[{ {2,dMax-dMin+1},{} }]  = image.jetColormap(dMax-dMin):float() -- generate a Jet colourmap (I made this function u.u)
-map[dMax+1]:fill(.5) -- set to a neutral grey the non-computed disparity values
-colourised = torch.Tensor():typeAs(dispMap) -- allocate the space for the colourised version of the disparity map
+mapX[dMax+1]:fill(.5) -- set to a neutral grey the non-computed disparity values
+
+mapY = image.jetColormap(2*opt.UpDown + 1):float() -- generate a linearly spaced colourmap around Newton-(hue)-'s wheel
+mapY[5]:fill(.5) -- set to a neutral grey the non-computed disparity values
+
+colourisedX = torch.Tensor():typeAs(dispMapX) -- allocate the space for the colourised version of the disparity map
+colourisedY = torch.Tensor():typeAs(dispMapY) -- allocate the space for the colourised version of the disparity map
 
 -- Initialising variables for timing and fps printing
 i, totTime = 0, 0
@@ -102,9 +109,10 @@ while true do
    edges = edgeDetector(iCamera:double(),opt.kSize):float()[1]:abs()
 
    -- Computing the stereo correlation
-   dispMap:fill(0)
-   eex.stereo(dispMap, iCamera[1], iCameraOld[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
-   dispMap:add(-dMin)
+   dispMapX:fill(0)
+   dispMapY:fill(0)
+   eex.stereo(dispMapX, dispMapY, iCamera[1], iCameraOld[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
+   dispMapX:add(-dMin)
 
    -- Stopping the timer and summing up totTime
    time = sys.clock() - time
@@ -118,6 +126,8 @@ while true do
 
    -- Displaying the stereo correlation map
    --win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
-   dispMap.imgraph.colorize(colourised, dispMap, map)
-   winc = image.display{win = winc, image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
+   dispMapX.imgraph.colorize(colourisedX, dispMapX, mapX)
+   dispMapY.imgraph.colorize(colourisedY, dispMapY, mapY)
+   wincX = image.display{win = wincX, image = colourisedX, legend = 'Colour disparity mapX, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 2.5*400/width}
+   wincY = image.display{win = wincY, image = colourisedY, legend = 'Colour disparity mapY, UpDown = ' .. opt.UpDown .. ', th = ' .. opt.th, zoom = 2.5*400/width}
 end

@@ -9,21 +9,23 @@ static int l_stereo(lua_State *L)
 
   // get args
   const void* torch_FloatTensor_id = luaT_checktypename2id(L, "torch.FloatTensor");
-  THFloatTensor *dispMap_ptr = luaT_checkudata(L, 1, torch_FloatTensor_id);
-  THFloatTensor *iL_ptr      = luaT_checkudata(L, 2, torch_FloatTensor_id);
-  THFloatTensor *iR_ptr      = luaT_checkudata(L, 3, torch_FloatTensor_id);
-  THFloatTensor *edges_ptr   = luaT_checkudata(L, 4, torch_FloatTensor_id);
-  int corrWindowSize = lua_tonumber(L, 5);
-  int dMin = lua_tonumber(L, 6);
-  int dMax = lua_tonumber(L, 7);
-  int UpDown = lua_tonumber(L,8);
-  float th = lua_tonumber(L,9);
+  THFloatTensor *dispMapX_ptr = luaT_checkudata(L, 1, torch_FloatTensor_id);
+  THFloatTensor *dispMapY_ptr = luaT_checkudata(L, 2, torch_FloatTensor_id);
+  THFloatTensor *iL_ptr      = luaT_checkudata(L, 3, torch_FloatTensor_id);
+  THFloatTensor *iR_ptr      = luaT_checkudata(L, 4, torch_FloatTensor_id);
+  THFloatTensor *edges_ptr   = luaT_checkudata(L, 5, torch_FloatTensor_id);
+  int corrWindowSize = lua_tonumber(L, 6);
+  int dMin = lua_tonumber(L, 7);
+  int dMax = lua_tonumber(L, 8);
+  int UpDown = lua_tonumber(L,9);
+  float th = lua_tonumber(L,10);
 
   //Debug - yes, it does work
   //printf("Test from C\n");
 
   // get raw pointers
-  float *dispMap = THFloatTensor_data(dispMap_ptr);
+  float *dispMapX = THFloatTensor_data(dispMapX_ptr);
+  float *dispMapY = THFloatTensor_data(dispMapY_ptr);
   float *iL      = THFloatTensor_data(iL_ptr);
   float *iR      = THFloatTensor_data(iR_ptr);
   float *edges   = THFloatTensor_data(edges_ptr);
@@ -34,7 +36,7 @@ static int l_stereo(lua_State *L)
 
   //strides
   long *is = iL_ptr->stride;
-  long *os = dispMap_ptr->stride;
+  long *os = dispMapX_ptr->stride;
   long *es = edges_ptr->stride;
 
   /*//Debug
@@ -67,6 +69,8 @@ if (dMin < 0) lowerLimit = -dMin;
 
       float prevCorrScore = 65532;
       int bestMatchSoFar = lowerLimit+dMin;
+      int bestY = UpDown;
+
 
       if (*(edges+i*es[0]+j*es[1]) > th)
         for (ud = 0; ud <= 2*UpDown; ud++)
@@ -103,10 +107,12 @@ if (dMin < 0) lowerLimit = -dMin;
             if (corrScore < prevCorrScore) {
               prevCorrScore = corrScore;
               bestMatchSoFar = d;
+              bestY = ud;
             }
           }
 
-      dispMap[ i*os[0]+(j-lowerLimit)*os[1] ] = bestMatchSoFar;
+      dispMapY[ i*os[0]+(j-lowerLimit)*os[1] ] = bestY;
+      dispMapX[ i*os[0]+(j-lowerLimit)*os[1] ] = bestMatchSoFar;
     }
 
   lua_newtable(L);           // result = {}

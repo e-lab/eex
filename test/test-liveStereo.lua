@@ -104,7 +104,7 @@ while true do
    edges = edgeDetector(iCameraR:double(),opt.kSize):float()[1]:abs()
 
    -- Computing the stereo correlation
-   eex.stereo(dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
+   eex.stereo(dispMap, dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
 
    -- Stopping the timer and summing up totTime
    time = sys.clock() - time
