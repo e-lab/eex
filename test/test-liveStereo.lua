@@ -1,3 +1,4 @@
+#!/usr/bin/env torch
 -- This script compute the correlation between two live images from two cameras using SAD atm
 -- It calls a C function
 -- Created: September 2012
