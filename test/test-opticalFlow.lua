@@ -92,6 +92,7 @@ colourisedY = torch.Tensor():typeAs(dispMapY) -- allocate the space for the colo
 
 -- Initialising variables for timing and fps printing
 i, totTime = 0, 0
+print('Running...')
 
 while true do
    i = i + 1 -- Counter for the fps printing
@@ -120,7 +121,8 @@ while true do
 
    -- Every 10 frames, printing out the fps value
    if i == 10 then
-      print('fps = ' .. 10/totTime)
+      fps = string.format('%.2f',10/totTime)
+      --print('fps = ' .. fps)
       i, totTime = 0, 0
    end
 
@@ -128,6 +130,6 @@ while true do
    --win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
    dispMapX.imgraph.colorize(colourisedX, dispMapX, mapX)
    dispMapY.imgraph.colorize(colourisedY, dispMapY, mapY)
-   wincX = image.display{win = wincX, image = colourisedX, legend = 'Colour disparity mapX, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 2.5*400/width}
-   wincY = image.display{win = wincY, image = colourisedY, legend = 'Colour disparity mapY, UpDown = ' .. opt.UpDown .. ', th = ' .. opt.th, zoom = 2.5*400/width}
+   wincX = image.display{win = wincX, image = colourisedX, legend = 'Colour disparity mapX, LeftRight = ' .. dMax .. ', th = ' .. opt.th .. ', fps = ' .. fps, zoom = 2.5*400/width}
+   wincY = image.display{win = wincY, image = colourisedY, legend = 'Colour disparity mapY, UpDown = ' .. opt.UpDown .. ', th = ' .. opt.th .. ', fps = ' .. fps, zoom = 2.5*400/width}
 end
