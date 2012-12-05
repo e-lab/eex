@@ -23,10 +23,10 @@ cmd:text('Options:')
 -- global:
 cmd:option('-dMax', '16', 'Maximum disparity in X-direction')
 cmd:option('-dMin', '0', 'Minimum disparity in X-direction')
-cmd:option('-th', '.08', 'Background filtering [0, 2.5], 0.06 better for kSize = 3, 0.08 better for kSize = 5')
+cmd:option('-bgTh', '.08', 'Background filtering [0, 2.5], 0.06 better for kSize = 3, 0.08 better for kSize = 5')
 cmd:option('-kSize', '5', 'Edge kernel size {3,5}')
 cmd:option('-width', '100', 'Enter the width of the camera frame (robot feasible width = 60), max 400')
-cmd:option('-UpDown', '0', 'Enter the number of preceding/succeding lines to check')
+cmd:option('-dH', '0', 'Enter the number of preceding/succeding lines to check')
 cmd:option('-fps', '15', 'Enter the desired fps')
 cmd:text()
 opt = cmd:parse(arg or {})
@@ -71,7 +71,7 @@ iCameraR = image.rgb2y(iCameraRc):float()
 corrWindowSize = 9  -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
 dMin = opt.dMin     -- Minimum Disparity in X-direction (dMin < dMax)
 dMax = opt.dMax     -- Maximum Disparity in X-direction (dMax > dMin)
-UpDown = opt.UpDown -- Specifies the UpDown search
+UpDown = opt.dH -- Specifies the UpDown search
 
 nr = (#iCameraR)[2]        -- Number of row
 nc = (#iCameraR)[3]        -- Number of column
@@ -107,7 +107,7 @@ while true do
    edges = edgeDetector(iCameraR:double(),opt.kSize):float()[1]:abs()
 
    -- Computing the stereo correlation
-   eex.stereo(dispMap, dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
+   eex.stereo(dispMap, dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.bgTh)
 
    -- Stopping the timer and summing up totTime
    time = sys.clock() - time
@@ -123,5 +123,5 @@ while true do
    -- Displaying the stereo correlation map
    --win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
    dispMap.imgraph.colorize(colourised, dispMap, map)
-   winc = image.display{win = winc, image = colourised, min = 0, max = 1, gui = false, legend = 'Colour disparity map, UpDown = ' .. opt.UpDown .. ', dMax = ' .. dMax .. ', th = ' .. opt.th .. ', fps = ' .. fps, zoom = 3*400/width}
+   winc = image.display{win = winc, image = colourised, min = 0, max = 1, gui = false, legend = 'Colour disparity map, UpDown = ' .. UpDown .. ', dMax = ' .. dMax .. ', th = ' .. opt.bgTh .. ', fps = ' .. fps, zoom = 3*400/width}
 end

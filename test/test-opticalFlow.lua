@@ -21,12 +21,11 @@ cmd:text()
 cmd:text('Options:')
 
 -- global:
-cmd:option('-dMax', '4', 'Maximum disparity in X-direction')
-cmd:option('-dMin', '-4', 'Minimum disparity in X-direction')
-cmd:option('-th', '.08', 'Background filtering [0, 2.5], 0.06 better for kSize = 3, 0.08 better for kSize = 5')
+cmd:option('-dW', '4', 'Number of preceding/succeding columns to check')
+cmd:option('-dH', '4', 'Number of preceding/succeding rows to check')
+cmd:option('-bgTh', '.08', 'Background filtering threashold [0, 2.5], 0.06 better for kSize = 3, 0.08 better for kSize = 5')
 cmd:option('-kSize', '5', 'Edge kernel size {3,5}')
 cmd:option('-width', '100', 'Enter the width of the camera frame (robot feasible width = 60)')
-cmd:option('-UpDown', '4', 'Enter the number of preceding/succeding lines to check')
 cmd:option('-fps', '15', 'Enter the desired fps')
 cmd:text()
 opt = cmd:parse(arg or {})
@@ -68,9 +67,9 @@ iCamera = image.rgb2y(iCamera):float()
 -- useful parameters
 
 corrWindowSize = 9  -- Correlation Window Size, MUST BE AN ODD NUMBER!!!
-dMin = opt.dMin     -- Minimum Disparity in X-direction (dMin < dMax)
-dMax = opt.dMax     -- Maximum Disparity in X-direction (dMax > dMin)
-UpDown = opt.UpDown -- Specifies the UpDown search
+dMin = -opt.dW     -- Minimum Disparity in X-direction (dMin < dMax)
+dMax =  opt.dW     -- Maximum Disparity in X-direction (dMax > dMin)
+UpDown = opt.dH -- Specifies the UpDown search
 
 nr = (#iCamera)[2]        -- Number of row
 nc = (#iCamera)[3]        -- Number of column
@@ -86,7 +85,7 @@ mapX = image.jetColormap(dMax-dMin + 1):float() -- generate a linearly spaced co
 --map[{ {2,dMax-dMin+1},{} }]  = image.jetColormap(dMax-dMin):float() -- generate a Jet colourmap (I made this function u.u)
 mapX[dMax+1]:fill(.5) -- set to a neutral grey the non-computed disparity values
 
-mapY = image.jetColormap(2*opt.UpDown + 1):float() -- generate a linearly spaced colourmap around Newton-(hue)-'s wheel
+mapY = image.jetColormap(2*UpDown + 1):float() -- generate a linearly spaced colourmap around Newton-(hue)-'s wheel
 mapY[5]:fill(.5) -- set to a neutral grey the non-computed disparity values
 
 colourisedX = torch.Tensor():typeAs(dispMapX) -- allocate the space for the colourised version of the disparity map
@@ -114,7 +113,7 @@ while true do
    -- Computing the stereo correlation
    dispMapX:fill(0)
    dispMapY:fill(0)
-   eex.stereo(dispMapX, dispMapY, iCamera[1], iCameraOld[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.th)
+   eex.stereo(dispMapX, dispMapY, iCamera[1], iCameraOld[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.bgTh)
    dispMapX:add(-dMin)
 
    -- Stopping the timer and summing up totTime
@@ -132,6 +131,6 @@ while true do
    --win = image.display{win = win, image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 3*400/width}
    dispMapX.imgraph.colorize(colourisedX, dispMapX, mapX)
    dispMapY.imgraph.colorize(colourisedY, dispMapY, mapY)
-   wincX = image.display{win = wincX, image = colourisedX, gui = false, min = 0, max = 1, legend = 'Colour disparity mapX, LeftRight = ' .. dMax .. ', th = ' .. opt.th .. ', fps = ' .. fps, zoom = 2.5*400/width}
-   wincY = image.display{win = wincY, image = colourisedY, gui = false, min = 0, max = 1, legend = 'Colour disparity mapY, UpDown = ' .. opt.UpDown .. ', th = ' .. opt.th .. ', fps = ' .. fps, zoom = 2.5*400/width}
+   wincX = image.display{win = wincX, image = colourisedX, gui = false, min = 0, max = 1, legend = 'Colour disparity mapX, LeftRight = ' .. dMax .. ', th = ' .. opt.bgTh .. ', fps = ' .. fps, zoom = 2.5*400/width}
+   wincY = image.display{win = wincY, image = colourisedY, gui = false, min = 0, max = 1, legend = 'Colour disparity mapY, UpDown = ' .. UpDown .. ', th = ' .. opt.bgTh .. ', fps = ' .. fps, zoom = 2.5*400/width}
 end
