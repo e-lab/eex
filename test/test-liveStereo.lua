@@ -99,15 +99,21 @@ while true do
    iCameraRc = camera2:forward()
 
    -- Converting them into a greyscale map
-   iCameraR = image.rgb2y(iCameraRc):float()
-   iCameraL = image.rgb2y(iCameraLc):float()
+   iCameraR = image.rgb2y(iCameraRc)--:float()
+   iCameraL = image.rgb2y(iCameraLc)--:float()
 
    -- Computing the edges of the LEFT image (RIGHT camera)
    require 'edgeDetector'
    edges = edgeDetector(iCameraR:double(),opt.kSize):float()[1]:abs()
 
+   -- Local normalisation
+   kernel = image.gaussian1D(9)
+   normalisation = nn.SpatialContrastiveNormalization(1, kernel)
+   iCameraRNorm = normalisation:forward(iCameraR):float()
+   iCameraLNorm = normalisation:forward(iCameraL):float()
+
    -- Computing the stereo correlation
-   eex.stereo(dispMap, dispMap, iCameraR[1], iCameraL[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.bgTh)
+   eex.stereo(dispMap, dispMap, iCameraRNorm[1], iCameraLNorm[1], edges, corrWindowSize, dMin, dMax, UpDown, opt.bgTh)
 
    -- Stopping the timer and summing up totTime
    time = sys.clock() - time
