@@ -63,14 +63,14 @@ static int l_stereo(lua_State *L)
   int lowerLimit = 0;
   if (dMin < 0) lowerLimit = -dMin;
 
-#pragma omp parallel for private(i,j,ii,jj,d,ud)
+//#pragma omp parallel for private(i,j,ii,jj,d,ud)
   for (i = 0; i < nr-(corrWindowSize+2*UpDown-1); i++)
     for (j = lowerLimit; j < nc-(corrWindowSize+dMax-1); j++) {
 
       // Debug
-      //printf("i = %i, j = %i\n",i,
+      //printf("i = %d, j = %d\n",i,j);
 
-      float prevCorrScore = 65532;
+      float prevCorrScore = 0; //For SAD 65532, 0 for correlation
       int bestX = lowerLimit+dMin; //dMin for stereo, 0 for opticalFlow
       int bestY = UpDown; //this does make sense only for opticalFlow
 
@@ -89,7 +89,11 @@ static int l_stereo(lua_State *L)
               for (jj = 0; jj < corrWindowSize; jj++) {
                 //float pxDiff = abs( iL[pos0+ii*is[0]+jj*is[1] ] - iR[pos1+ii*is[0]+jj*is[1] ]); //basic version
                 //float pxDiff = abs( *i_ptr  - iR[pos1+ii*is[0]+jj*is[1] ]); //first more cmplx version for higher parallel implementation
-                float pxDiff = abs( *i_ptr - *j_ptr ); //SSE compatible format (not implemented yet)
+
+                //SAD on/off
+                //float pxDiff = abs( *i_ptr - *j_ptr ); //SSE compatible format (not implemented yet)
+                //Correlation on/off
+                float pxDiff = *i_ptr * *j_ptr;
 
                 //Debug
                 //printf("ii = %i, jj = %i, pxDiff = %f",ii,jj,pxDiff);
@@ -100,14 +104,14 @@ static int l_stereo(lua_State *L)
             }
 
             // Debug
-            /*printf("corrScore = %f\n",corrScore);
-              printf("prevCorrScore = %f\n",prevCorrScore);
-              printf("bestX = %f, d = %i\n",d);
-              getchar();
-              uprintf("%d and ",UpDown);
-              getchar();*/
+            /*printf("pixel (%d,%d)\n",i,j-lowerLimit);
+            printf("corrScore = %f\n",corrScore);
+            printf("prevCorrScore = %f\n",prevCorrScore);
+            printf("bestX = %d, d = %d\n",bestX,d);
+            printf("bestY = %d, up = %d\n",bestY,UpDown);
+            getchar();*/
 
-            if (corrScore < prevCorrScore) {
+            if (corrScore > prevCorrScore) { //< for SAD, > for correlation
               prevCorrScore = corrScore;
               bestX = d;  //left/right best match
               bestY = ud; //up/down best match
