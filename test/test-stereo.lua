@@ -1,3 +1,4 @@
+#!/usr/bin/env torch
 -- This script compute the correlation between two images using SAD atm
 -- It calls a C function
 -- Created: September 2012
@@ -75,19 +76,6 @@ print('dMax = ' .. dMax .. ', time elapsed = ' .. time .. 's')
 image.display{image = dispMap, legend = 'Disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 2}
 --image.display{image = edges, legend = 'Edges of LEFT image'}
 
--- saving the result to png file
-
-if opt.save == 'y' then
-   io.write('Input the file name (without extension): ')
-   ans = io.read()
-   ans = ans .. '.png'
-   im = torch.Tensor(1,(#dispMap)[1],(#dispMap)[2])
-   im[1] = dispMap
-   im:mul(1/(dMax-dMin))
-   image.savePNG(ans,im)
-   io.write('"' .. ans .. '" written succesfully!\n')
-end
-
 -- colourise the output
 
 map = torch.Tensor(dMax-dMin + 1,3):float() -- allocate the space for the colourmap + the NC (grey) layer
@@ -100,3 +88,17 @@ colourised = torch.Tensor():typeAs(dispMap)
 dispMap.imgraph.colorize(colourised, dispMap, map)
 
 image.display{image = colourised, legend = 'Colour disparity map, dMax = ' .. dMax .. ', th = ' .. opt.th, zoom = 2}
+
+-- saving the result to png file
+
+if opt.save == 'y' then
+   io.write('Input the file name (without extension): ')
+   ans = io.read()
+   ans = ans .. '.png'
+   --im = torch.Tensor(1,(#dispMap)[1],(#dispMap)[2])
+   --im[1] = dispMap
+   --im:mul(1/(dMax-dMin))
+   --image.savePNG(ans,im)
+   image.savePNG(ans,colourised:double())
+   io.write('"' .. ans .. '" written succesfully!\n')
+end
