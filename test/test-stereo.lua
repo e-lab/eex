@@ -95,10 +95,15 @@ if opt.save == 'y' then
    io.write('Input the file name (without extension): ')
    ans = io.read()
    ans = ans .. '.png'
-   --im = torch.Tensor(1,(#dispMap)[1],(#dispMap)[2])
-   --im[1] = dispMap
-   --im:mul(1/(dMax-dMin))
-   --image.savePNG(ans,im)
-   image.savePNG(ans,colourised:double())
+   io.write('[C]olour of [G]rey scale? ')
+   type = io.read()
+   if type == 'G' or type == 'g' then
+      im = torch.Tensor(1,(#dispMap)[1],(#dispMap)[2])
+      im[1] = dispMap
+      im:mul(1/(dMax-dMin))
+      image.savePNG(ans,im)
+   else
+      image.savePNG(ans,colourised:double())
+   end
    io.write('"' .. ans .. '" written succesfully!\n')
 end
