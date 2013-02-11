@@ -2,9 +2,9 @@ local eextest = {}
 local precision = 1e-5
 local mytester
 
-local function template_SpatialSAD(type,dw,dh)
+local function template_SpatialSAD(mtype,dw,dh)
    local default_type = torch.getdefaulttensortype()
-   torch.setdefaulttensortype(type)
+   torch.setdefaulttensortype(mtype)
    local input = image.lena()[{{},{200,300},{200,300}}]
    local kn,kp,kh,kw
    kn=2;kp=3;kh=31;kw=31
@@ -30,7 +30,7 @@ local function template_SpatialSAD(type,dw,dh)
    module:templates(kernels)
    local m_output = module:forward(input)
    local l_output = luasad(input,kernels,dw,dh)
-   mytester:assertTensorEq(m_output,l_output,1000*precision,' - output err (type: ' .. type .. ', dW: ' .. dw .. ', dH: ' .. dh .. ')')
+   mytester:assertTensorEq(m_output,l_output,1000*precision,' - output err (type: ' .. mtype .. ', dW: ' .. dw .. ', dH: ' .. dh .. ')')
    torch.setdefaulttensortype(default_type)
 end
 function eextest.SpatialSAD_1() template_SpatialSAD('torch.FloatTensor',1,1) end
@@ -44,6 +44,26 @@ function eextest.SpatialSAD_6() template_SpatialSAD('torch.DoubleTensor',3,3) en
 -- TODO: add Jacobian test once derivatives are implemented
 -- TODO: add tests for batch version once implemented
 -- TODO: test boundary conditions
+
+local function template_SpatialMaxMap(mtype)
+   local default_type = torch.getdefaulttensortype()
+   torch.setdefaulttensortype(mtype)
+   local conMatrix = torch.Tensor{{1,1},{2,1},{3,2},{4,2}}
+   local module = nn.SpatialMaxMap(conMatrix)
+   local input = torch.Tensor{ {{0,2},{3,0}}, {{1,0},{0,4}}, {{5,0},{0,8}}, {{0,6},{7,0}} }
+   local m_output = module:forward(input)
+   local t_output = torch.Tensor{ {{1,2},{3,4}}, {{5,6},{7,8}} }
+   mytester:assertTensorEq(m_output,t_output,precision,' - output err (type: ' .. mtype .. ')')
+   torch.setdefaulttensortype(default_type)
+end
+function eextest.SpatialMaxMap_1() template_SpatialMaxMap('torch.FloatTensor') end
+function eextest.SpatialMaxMap_2() template_SpatialMaxMap('torch.DoubleTensor') end
+
+-- SpatialMaxMap testing:
+-- TODO: add Jacobian test once derivatives are implemented
+-- TODO: ?add tests for batch version once implemented
+-- TODO: test boundary conditions
+
 
 function eex.test_modules(tests)
    xlua.require('image',true)
