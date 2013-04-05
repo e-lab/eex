@@ -1,6 +1,11 @@
-eex
-===
+# e-lab extra package for Torch7
 
-Torch extras from e-Lab
+This package provides extra functions for Torch7 from e-lab, Purdue University
 
-* To install clone the repo and run torch-pkg deploy
+## Install
+
+To install this package, use the following command: 
+
+``` sh
+$ luarocks make
+```
