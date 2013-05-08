@@ -1,6 +1,7 @@
 require 'torch'
 require 'xlua'
 require 'nn'
+require 'sys'
 
 -- create global eex table:
 eex = {}
@@ -17,3 +18,6 @@ torch.include('eex', 'MulAnySize.lua')
 -- testing:
 torch.include('eex', 'test-modules.lua')
 torch.include('eex', 'test-performance.lua')
+
+-- useful functions:
+require 'usefulFunctions'

@@ -9,3 +9,32 @@ To install this package, use the following command:
 ``` sh
 $ luarocks make
 ```
+=======
+
+## Short documentation
+
+### Useful functions
+
+#### ls
+
+##### Syntax
+
+Listing the content of the current directory and fetching the number of elements it contains
+
+```
+ls()
+\#ls()
+```
+
+Listing the content of a specific directory `path` (`path` is a string)
+
+```
+ls(path)
+\#ls(path)
+```
+
+Getting the *full file name* (file name preceded by its parent directories) of the 3rd image contained in a specific directory path
+
+```
+ls(path .. '/*.png')[3]
+```
