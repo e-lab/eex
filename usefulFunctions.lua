@@ -1,16 +1,15 @@
 -- Requires ------------------------------------------------------------------
-
 require 'sys'
 
 -- Functions -----------------------------------------------------------------
 
 -- LS - unix listing command
-function ls(path) return sys.split(sys.ls(path),'\n') end
+function eex.ls(path) return sys.split(sys.ls(path),'\n') end
 
 -- datasetPath - getting the environmental $DATASET variable
-function datasetPath()
+function eex.datasetPath()
    local ds
-   ds = os.getenv("DATASETS")
+   ds = os.getenv("EEX_DATASETS")
    if not ds then
       io.write [[
 
@@ -19,7 +18,7 @@ function datasetPath()
 ******************************************************************************
    Please define an environment $DATASET variable
 
-      $ export DATASET='datasetDirectoryOnCurrentMachine'
+      $ export EEX_DATASETS='datasetDirectoryOnCurrentMachine'
 
    and add it to your <.bashrc> configuration file in order to do not
    visualise this WARNING message again

@@ -6,7 +6,7 @@ This package provides extra functions for Torch7 from e-lab, Purdue University
 
 To install this package, use the following command: 
 
-``` sh
+```sh
 $ luarocks make
 ```
 
@@ -15,6 +15,13 @@ $ luarocks make
 ### Useful functions
 
 #### ls - unix listing command
+
+In order to add `eex.ls` to the global name space type the following Lua command
+
+```lua
+require 'eex'
+ls = eex.ls
+```
 
 Listing the content of the current directory and fetching the number of elements it contains
 

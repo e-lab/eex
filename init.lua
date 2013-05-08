@@ -20,4 +20,4 @@ torch.include('eex', 'test-modules.lua')
 torch.include('eex', 'test-performance.lua')
 
 -- useful functions:
-require 'eex/usefulFunctions'
+torch.include('eex', 'usefulFunctions.lua')
