@@ -42,7 +42,7 @@ Getting the *full file name* (file name preceded by its parent directories) of t
 ls(path .. '/*.png')[3]
 ```
 
-#### eex.datasetsPath - fetches EEX_DATASETS environment variable
+#### eex.datasetsPath - fetches $EEX_DATASETS environment variable
 
 Returns the location of the *datasets* directory on the current machine. Basically it fetches the `$EEX_DATASETS` environment variable if existing, otherwise it prompts the user to input the location of the *datasets* dicrectory. In order to `ls` the content of the *abc-dataset* we can do as follow
 
