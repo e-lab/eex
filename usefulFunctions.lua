@@ -18,10 +18,11 @@ function eex.datasetsPath()
 ******************************************************************************
    Please define an environment $EEX_DATASETS variable
 
-      $ export EEX_DATASETS='datasetsDirectoryOnCurrentMachine'
+      $ export EEX_DATASETS='datasetsDirectoryOnCurrentMachine/'
 
    and add it to your <.bashrc> configuration file in order to do not
-   visualise this WARNING message again
+   visualise this WARNING message again.
+   Note the forward slash </> at the end of the path.
 ******************************************************************************
 
 Please, type the dataset directory path for the current machine:
