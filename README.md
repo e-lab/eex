@@ -48,5 +48,5 @@ Returns the location of the *datasets* directory on the current machine. Basical
 
 ```lua
 ds = eex.datasetsPath()
-print(ls(ds .. 'abc-dataset'))
+print(ls(ds .. '/abc-dataset'))
 ```
