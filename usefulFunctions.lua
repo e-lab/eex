@@ -18,16 +18,20 @@ function eex.datasetsPath()
 ******************************************************************************
    Please define an environment $EEX_DATASETS variable
 
-      $ export EEX_DATASETS='datasetsDirectoryOnCurrentMachine/'
+      $ export EEX_DATASETS=datasetsDirectoryOnCurrentMachine/
 
    and add it to your <.bashrc> configuration file in order to do not
    visualise this WARNING message again.
-   Note the forward slash </> at the end of the path.
+   As long as <datasetsDirectoryOnCurrentMachine> in not included by
+   quotations (i.e. it is not a string), you can use shortcuts such as
+   <~/>, <$HOME/>, <$PATH/>, etc..
 ******************************************************************************
 
 Please, type the dataset directory path for the current machine:
 ]]
       ds = io.read()
+      -- add `/` at the end of the path if it's missing
+      if string.sub(ds,-1) ~= '/' then ds = ds .. '/' end
       io.write '\n'
    end
    return ds
