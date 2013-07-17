@@ -2,7 +2,6 @@
 
 
 require 'image'
-require 'lab'
 require 'xlua'
 
 -- For the similar Gabor code go to 
@@ -13,9 +12,23 @@ require 'xlua'
 -- angle (in rad)
 -- elipse_ratio = aspect ratio(0.5)
 
+-- In order to get some understanding you can run the following test
+--[[
+win = nil
+sz = 13
+s  = .125
+f = 2
+r = .5
+for a = 0,180,30 do
+   alpha = a/180*math.pi
+   win=image.display{image=gabor(sz,s,alpha,1/f,r),zoom=20,win=win,legend='alpha = ' .. a .. 'deg'}
+   io.read()
+end
+]]
+
 function gabor(size, sigma, angle, period, ellipse_ratio)
       -- init matrix
-      local data = lab.zeros(size,size)
+      local data = torch.zeros(size,size)
 
       -- image -> pixel
       period = period * size
@@ -28,7 +41,7 @@ function gabor(size, sigma, angle, period, ellipse_ratio)
 
       for y=-halfsize,halfsize do
          for x=-halfsize,halfsize do
-				
+
             x_angle = x*math.cos(angle) + y*math.sin(angle)
             y_angle = -x*math.sin(angle) + y*math.cos(angle)
             data[x+halfsize+1][y+halfsize+1] 
@@ -36,7 +49,7 @@ function gabor(size, sigma, angle, period, ellipse_ratio)
                  * math.cos(2*math.pi*x_angle/period)
          end
       end
-      
+
       -- return new tensor
       return data
    end
