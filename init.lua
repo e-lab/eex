@@ -22,3 +22,4 @@ torch.include('eex', 'test-performance.lua')
 
 -- useful functions:
 torch.include('eex', 'usefulFunctions.lua')
+torch.include('eex', 'networkConversion.lua')
