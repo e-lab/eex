@@ -14,6 +14,7 @@ torch.include('eex', 'SpatialSAD.lua')
 torch.include('eex', 'SpatialSADMap.lua')
 torch.include('eex', 'SpatialMaxMap.lua')
 torch.include('eex', 'MulAnySize.lua')
+torch.include('eex', 'GaborLayer.lua')
 
 -- testing:
 torch.include('eex', 'test-modules.lua')
