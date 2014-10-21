@@ -26,7 +26,7 @@ for a = 0,180,30 do
 end
 ]]
 
-function gabor(size, sigma, angle, period, ellipse_ratio)
+function eex.gabor(size, sigma, angle, period, ellipse_ratio)
       -- init matrix
       local data = torch.zeros(size,size)
 
