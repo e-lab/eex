@@ -50,3 +50,7 @@ Returns the location of the *datasets* directory on the current machine. Basical
 ds = eex.datasetsPath()
 print(ls(ds .. '/abc-dataset'))
 ```
+
+### License
+
+MIT
